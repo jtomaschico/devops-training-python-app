@@ -2,13 +2,9 @@ pipeline {
   // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
   agent any
 
-  environment {
-    PYTHON_IMAGE = 'python:3.6-slim'
-  }  
-
   agent {
     docker { 
-        image PYTHON_IMAGE
+        image 'python:3.6-slim'
         args '-u root' 
     }
   }
@@ -20,7 +16,7 @@ pipeline {
         echo "Build: ${env.BUILD_NUMBER}"
       }
     }
-    stage('Install') {
+    stage('Prepare') {
        steps {
           sh 'apt-get update && apt-get install -y make'
           sh 'pip install -r requirements.txt'
