@@ -8,7 +8,7 @@ pipeline {
 
   agent {
     docker { 
-        image 'PYTHON_TEST_IMAGE
+        image PYTHON_TEST_IMAGE
         args '-u root' 
     }
   }
@@ -26,15 +26,15 @@ pipeline {
           sh 'pip install -r requirements.txt'
        }
     }
+    stage('CI - Lint') {
+      steps {
+        sh 'make lint'
+      }
+    } 
     stage('CI - Test') {
       steps {
          h 'pytest -q'
       }
     }
-    stage('CI - Lint') {
-      steps {
-        sh 'make lint'
-      }
-    }  
   }
 } 
