@@ -3,12 +3,12 @@ pipeline {
   agent any
 
   environment {
-    PYTHON_TEST_IMAGE = 'python:3.6-slim'
+    PYTHON_IMAGE = 'python:3.6-slim'
   }  
 
   agent {
     docker { 
-        image PYTHON_TEST_IMAGE
+        image PYTHON_IMAGE
         args '-u root' 
     }
   }
@@ -26,12 +26,12 @@ pipeline {
           sh 'pip install -r requirements.txt'
        }
     }
-    //stage('CI - Lint') {
-      //steps {
-        //sh 'apt-get update && apt-get install -y make'
-        //sh 'make lint'
-      //}
-    //} 
+    stage('CI - Lint') {
+      steps {
+         sh 'make lint'
+      }
+    }
+      
     stage('CI - Test') {
       steps {
          h 'pytest -q'
