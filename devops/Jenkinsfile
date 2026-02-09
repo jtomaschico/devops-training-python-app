@@ -2,6 +2,10 @@ pipeline {
   // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
   agent any
 
+  environment {
+    PYTHON_TEST_IMAGE = 'python:3.6-slim'
+  }  
+
   stages {
     stage('Info') {
       steps {
@@ -12,7 +16,8 @@ pipeline {
     stage('CI - Test') {
       steps {
         script {
-          runInDocker('python:3.6-slim') {
+          runInDocker(env.PYTHON_TEST_IMAGE) {
+            sh 'pip install -r requirements.txt'
             sh 'pytest -q'
           }
         }
