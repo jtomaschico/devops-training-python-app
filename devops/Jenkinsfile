@@ -1,13 +1,17 @@
+def runInDocker(String image, Closure body) {
+  // TODO (E4): Ejecuta `body()` dentro del contenedor indicado usando Docker Pipeline:
+   docker.image(image).inside { body() }
+}
 pipeline {
   // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
   agent any
 
-  agent {
+  /*agent {
     docker { 
         image 'python:3.6-slim'
         args '-u root' 
     }
-  }
+  }*/
 
   stages {
     stage('Info') {
@@ -23,7 +27,12 @@ pipeline {
           sh 'pip install -r requirements.txt flake8 mypy'
        }
     }
-    stage('CI - Lint') {
+    stage('Test') {
+      steps {
+         h 'pytest -q'
+      }
+    }
+    /*stage('CI - Lint') {
       steps {
          sh 'make lint'
       }
@@ -31,7 +40,24 @@ pipeline {
 
     stage('CI - Test') {
       steps {
-         h 'pytest -q'
+         sh 'pytest -q'
+      }
+    }*/
+    stage('CI - Lint') {
+      steps {
+         runInDocker('python:3.6-slim') { 
+            sh 'apt-get update && apt-get install -y make'
+            sh 'make lint'
+         }
+      }
+    }
+    stage('CI - Test') {
+      steps {
+         runInDocker('python:3.6-slim') { 
+            sh 'pip install -r requirements.txt'
+            sh 'pip install -r requirements.txt flake8 mypy'  
+            sh 'pytest -q'
+         }    
       }
     }
   }
