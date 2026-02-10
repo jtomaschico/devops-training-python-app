@@ -20,21 +20,23 @@ pipeline {
         echo "Build: ${env.BUILD_NUMBER}"
       }
     }
-    stage('Prepare') {
+    /*stage('Prepare') {
        steps {
           sh 'apt-get update && apt-get install -y make'
           sh 'pip install -r requirements.txt'
           sh 'pip install -r requirements.txt flake8 mypy'
        }
-    }
+    }*/
     stage('CI - Lint') {
       steps {
+         sh 'apt-get update && apt-get install -y make'
          sh 'make lint'
       }
     }
 
     stage('CI - Test') {
       steps {
+         sh 'pip install -r requirements.txt flake8 mypy'
          sh 'pytest -q'
       }
     }
