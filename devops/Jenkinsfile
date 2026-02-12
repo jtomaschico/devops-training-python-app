@@ -31,6 +31,14 @@ pipeline {
         }
       }
     }
+    stage('CI - Build image') {
+      steps {
+        script {
+           //docker.build(env.IMAGE_NAME, "-f devops/Dockerfile .")
+           docker.build('python:3.6-slim', "-f devops/Dockerfile .")
+        }
+      }
+    }
   }
 }
   
