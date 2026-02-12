@@ -8,7 +8,7 @@ pipeline {
 
   environment {
     PYTHON_IMAGE = 'python:3.6-slim'
-    IMAGE_REPO_LOCAL = 'jtomaschico/devops-training-python-app'
+    IMAGE_REPO_LOCAL = 'devops-training-python-app'
   }
 
   stages {
