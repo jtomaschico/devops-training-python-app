@@ -24,7 +24,7 @@ pipeline {
         script {
           env.PYTHON_IMAGE = "1.0.${env.BUILD_NUMBER}"
           env.VERSION_JAR = "${env.PYTHON_IMAGE}-SNAPSHOT"
-          env.IMAGE_LOCAL = "${env.IMAGE_REPO_LOCAL}:${env.PYTHON_IMAGE}"
+          env.IMAGE_LOCAL = "${env.IMAGE_REPO_LOCAL}:${env.IMAGE_VERSION}"
         }
       }
     }
