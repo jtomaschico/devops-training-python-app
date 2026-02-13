@@ -6,6 +6,10 @@ pipeline {
   // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
   agent any
 
+  parameters {
+    booleanParam(name: 'RUN_CD', defaultValue: false, description: 'Ejecutar CD') 
+  } 
+
   environment {
     PYTHON_IMAGE = 'python:3.6-slim'
     IMAGE_REPO_LOCAL = 'devops-training-python-app'
@@ -47,6 +51,43 @@ pipeline {
         }
       }
     }
+    stage('CD') {
+        when {
+          allOf {
+            anyOf {
+              branch 'develop'
+              branch 'main'
+            }
+            expression { return params.RUN_CD }
+          }
+        }
+        steps {
+          script {
+            // Definir entorno de despliegue
+            echo "CD habilitado: RUN_CD=${params.RUN_CD}, branch=${env.BRANCH_NAME}"  
+            env.DEPLOY_ENV = (env.BRANCH_NAME == 'main') ? 'PRO' : 'DEV'
+            echo "Deploy env: ${env.DEPLOY_ENV}"
+      
+            try {
+              sh 'docker compose up -d'
+              sh 'sleep 5'
+              sh 'docker compose logs app'
+            } finally {
+              sh 'docker compose down --volumes'
+            }
+          }
+        }
+        post {
+          always {
+            echo "Cleanup done"
+          }
+          success { echo 'SUCCESS' }
+          failure { 
+             echo 'FAILURE' 
+             sh 'docker compose logs || true'
+          }
+        }
+      }
   }
 }
   
