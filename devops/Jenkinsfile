@@ -1,31 +1,93 @@
-/*
-  Practica 2 - Jenkinsfile dummy (PUNTO DE PARTIDA)
-
-  Este Jenkinsfile es intencionalmente simple. En la Practica 2 iras anadiendo
-  piezas (stages, agents, funciones Groovy, Docker build, docker compose, etc.)
-  hasta construir un pipeline CI/CD completo.
-*/
-
+def runInDocker(String image, Closure body) {
+  // TODO (E4): Ejecuta `body()` dentro del contenedor indicado usando Docker Pipeline:
+   docker.image(image).inside { body() }
+}
 pipeline {
   // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
   agent any
 
+  parameters {
+    booleanParam(name: 'RUN_CD', defaultValue: false, description: 'Ejecutar CD') 
+  } 
+
+  environment {
+    PYTHON_IMAGE = 'python:3.6-slim'
+    IMAGE_REPO_LOCAL = 'devops-training-python-app'
+  }
+
   stages {
-    stage('Test') {
-      /*
-        `agent` dentro de un stage permite que SOLO ese stage se ejecute en un contexto concreto.
-        En este caso, usamos Docker como capa de virtualizacion: los comandos se ejecutan dentro
-        de un contenedor temporal.
-      */
-      agent {
-        docker {
-          image 'maven:3.8.6-openjdk-11-slim'
-        }
-      }
+    stage('Info') {
       steps {
-        sh 'mvn -version'
-        sh 'echo "Stage dummy. En la Practica 2 ejecutaras aqui los tests unitarios."'
+        echo "Job: ${env.JOB_NAME}"
+        echo "Build: ${env.BUILD_NUMBER}"
       }
     }
+    
+    stage('Versioning') {
+      steps {
+        script {
+          env.PYTHON_IMAGE = "1.0.${env.BUILD_NUMBER}"
+          env.VERSION_JAR = "${env.PYTHON_IMAGE}-SNAPSHOT"
+          env.IMAGE_LOCAL = "${env.IMAGE_REPO_LOCAL}:${env.IMAGE_VERSION}"
+        }
+      }
+    }
+    
+    stage('CI - Test') {
+      steps {
+        script {
+          runInDocker(env.PYTHON_IMAGE) {
+            sh 'python --version'
+            sh 'pip install -r requirements.txt'
+            sh 'pytest -q'
+          }
+        }
+      }
+    }
+    stage('CI - Build image') {
+      steps {
+        script {
+           docker.build(env.IMAGE_LOCAL, "-f devops/Dockerfile .")
+        }
+      }
+    }
+    stage('CD') {
+        when {
+          allOf {
+            anyOf {
+              branch 'develop'
+              branch 'main'
+            }
+            expression { return params.RUN_CD }
+          }
+        }
+        steps {
+          script {
+            // Definir entorno de despliegue
+            echo "CD habilitado: RUN_CD=${params.RUN_CD}, branch=${env.BRANCH_NAME}"  
+            env.DEPLOY_ENV = (env.BRANCH_NAME == 'main') ? 'PRO' : 'DEV'
+            echo "Deploy env: ${env.DEPLOY_ENV}"
+      
+            try {
+              sh 'docker compose up -d'
+              sh 'sleep 5'
+              sh 'docker compose logs app'
+            } finally {
+              sh 'docker compose down --volumes'
+            }
+          }
+        }
+        post {
+          always {
+            echo "Cleanup done"
+          }
+          success { echo 'SUCCESS' }
+          failure { 
+             echo 'FAILURE' 
+             sh 'docker compose logs || true'
+          }
+        }
+      }
   }
 }
+  
