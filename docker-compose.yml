@@ -2,7 +2,8 @@ version: "3.7"
 
 services:
   app:
-    image: jtomaschico/devops-training-python-app:0.0.1
+    #image: jtomaschico/devops-training-python-app:0.0.1
+    image: ${IMAGE_NAME}
     #build: 
     #  context: .
     #  dockerfile: devops/Dockerfile
@@ -45,4 +46,5 @@ networks:
 volumes:
 
   dbdata:
+
 
