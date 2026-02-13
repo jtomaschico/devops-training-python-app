@@ -47,7 +47,7 @@ pipeline {
     stage('CI - Build image') {
       steps {
         script {
-           docker.build(env.IMAGE_LOCAL, "-f devops/Dockerfile .")
+           docker.build(env.IMAGE_LOCAL:${env.BUILD_NUMBER}, "-f devops/Dockerfile .")
         }
       }
     }
