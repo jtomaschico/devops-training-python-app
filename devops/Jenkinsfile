@@ -47,7 +47,8 @@ pipeline {
     stage('CI - Build image') {
       steps {
         script {
-           docker.build(env.IMAGE_LOCAL:${env.BUILD_NUMBER}, "-f devops/Dockerfile .")
+           env.IMAGE_NAME = "devops-training-python-app:${env.BUILD_NUMBER}"
+           docker.build(env.IMAGE_NAME, "-f devops/Dockerfile .")
         }
       }
     }
