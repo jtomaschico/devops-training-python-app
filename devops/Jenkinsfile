@@ -1,7 +1,8 @@
-def runInDocker(String image, Closure body) {
+/*def runInDocker(String image, Closure body) {
   // TODO (E4): Ejecuta `body()` dentro del contenedor indicado usando Docker Pipeline:
    docker.image(image).inside { body() }
-}
+}*/
+@Library('iac-devops-lib@feat/base') _
 pipeline {
   // `agent any` = el pipeline se ejecuta en cualquier nodo/agente disponible.
   agent any
@@ -26,7 +27,7 @@ pipeline {
     stage('Versioning') {
       steps {
         script {
-          env.PYTHON_IMAGE = "1.0.${env.BUILD_NUMBER}"
+          env.PYTHON_IMAGE = devopsLib.readVersion('VERSION')
           env.VERSION_JAR = "${env.PYTHON_IMAGE}-SNAPSHOT"
           env.IMAGE_LOCAL = "${env.IMAGE_REPO_LOCAL}:${env.IMAGE_VERSION}"
         }
@@ -36,7 +37,7 @@ pipeline {
     stage('CI - Test') {
       steps {
         script {
-          runInDocker(env.PYTHON_IMAGE) {
+          devopsLib.runInDocker(env.PYTHON_IMAGE) {
             sh 'python --version'
             sh 'pip install -r requirements.txt'
             sh 'pytest -q'
