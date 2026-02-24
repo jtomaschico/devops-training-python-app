@@ -1,0 +1,67 @@
+name: CI-CD
+
+on:
+  push:
+    branches:
+      - '**'
+
+  pull_request:
+    branches:
+      - develop
+      - master
+
+  workflow_dispatch:
+    inputs:
+     #definimos el parámetro de codición para ejecutar o no el job CD
+      RUN_CD:
+        description: 'Run Continuous Deployment'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+  
+env:
+  # Variables de entorno globales:
+  IMAGE_NAME: "scalian_training-python-app"
+  APP_URL: "http://localhost:5001/"
+  REGISTRY: ${{ vars.REGISTRY_HOST }}
+  ARTIFACTORY: ${{ vars.ARTIFACTORY_URL }}
+  DEPLOY_ENV: ${{ github.ref_name == 'main' && 'PRO' || 'DEV' }}
+  
+jobs:
+  ci:
+    # nombre que veremos del job
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    #runs-on: [self-hosted, linux, docker]
+    # Ejecutar el job en contenedor (Docker como agente):
+    container: python:3.6-slim
+    # definición de los diferentes pasos del job
+    steps:
+      # Descarga el código del repositorio dentro de la máquina virtual.
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Mostrar contexto
+        run: |
+          echo "Repo: $GITHUB_REPOSITORY"
+          echo "Ref:  $GITHUB_REF"
+          echo "Branch: $GITHUB_REF_NAME"
+          echo "RUN_CD: ${{ inputs.RUN_CD }}"
+          echo "Deploying to $DEPLOY_ENV"
+          
+      - name: Usando variables en shell
+        run: |
+          echo "Image: $IMAGE_NAME"
+          echo "App URL: $APP_URL" 
+
+      - name: Mostrar variables
+        run: |
+          echo "Registry host: $REGISTRY"
+          echo "Artifactory URL: $ARTIFACTORY"
+          echo "REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}"
+          echo "REGISTRY_HOST: ${{ vars.REGISTRY_HOST }}"
+          echo "REGISTRY_USER: ${{ secrets.REGISTRY_USER }}"
