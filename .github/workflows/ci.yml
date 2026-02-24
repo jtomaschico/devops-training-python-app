@@ -77,4 +77,12 @@ jobs:
           echo "🧪 Ejecutando tests con pytest..."
           # pytest -q para salida concisa
           pytest -q --maxfail=1 --disable-warnings
+
+      - name: Build Docker image
+        run: |
+          echo "🚀 Construyendo la imagen Docker..."
+          # Build la imagen con el nombre definido en $IMAGE_NAME
+          docker build -t "$IMAGE_NAME:latest" -f devops/Dockerfile .
+          echo "✅ Imagen construida: $IMAGE_NAME:latest"
+
    
