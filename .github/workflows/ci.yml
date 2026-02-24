@@ -61,7 +61,6 @@ jobs:
 
       - name: Mostrar variables
         run: |
-          echo "Registry host: $REGISTRY"
           echo "Artifactory URL: $ARTIFACTORY"
           echo "REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}"
           echo "REGISTRY_HOST: ${{ vars.REGISTRY_HOST }}"
