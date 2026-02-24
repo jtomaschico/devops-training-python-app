@@ -65,3 +65,16 @@ jobs:
           echo "REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}"
           echo "REGISTRY_HOST: ${{ vars.REGISTRY_HOST }}"
           echo "REGISTRY_USER: ${{ secrets.REGISTRY_USER }}"
+
+      - name: Unit tests
+        run: |
+          echo "📦 Instalando dependencias..."
+          pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+      
+          echo "🧪 Ejecutando tests con pytest..."
+          # pytest -q para salida concisa
+          pytest -q --maxfail=1 --disable-warnings
+   
