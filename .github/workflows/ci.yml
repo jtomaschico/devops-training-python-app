@@ -79,12 +79,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          - name: Build Docker image
-            run: |
-              echo "🚀 Construyendo la imagen Docker..."
-              IMAGE_TAG=${{ github.sha }}
-              docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f devops/Dockerfile .
-              echo "✅ Imagen construida: $IMAGE_NAME:$IMAGE_TAG"
+          echo "🚀 Construyendo la imagen Docker..."
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f devops/Dockerfile .
+          echo "✅ Imagen construida: $IMAGE_NAME:$IMAGE_TAG"
 
           
 
