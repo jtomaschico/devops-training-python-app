@@ -35,11 +35,11 @@ jobs:
   ci:
     # nombre que veremos del job
     name: Continuous Integration
-    runs-on: ubuntu-latest
-    environment: DEV
-    #runs-on: [self-hosted, linux, docker]
+    #runs-on: ubuntu-latest
+    #environment: DEV
+    runs-on: [self-hosted, linux, docker]
     # Ejecutar el job en contenedor (Docker como agente):
-    #container: python:3.6-slim
+    container: python:3.6-slim
     # definición de los diferentes pasos del job
     steps:
       # Descarga el código del repositorio dentro de la máquina virtual.
