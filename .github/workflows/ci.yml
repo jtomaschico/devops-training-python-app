@@ -79,12 +79,13 @@ jobs:
 
       - name: Build Docker image
         run: |
-          echo "🚀 Construyendo la imagen Docker..."
-          # Build la imagen con el nombre definido en $IMAGE_NAME
-          #docker build -t "$IMAGE_NAME" -f devops/Dockerfile .
-          env.IMAGE_NAME = "devops-training-python-app:${env.BUILD_NUMBER}"
-          docker.build(env.IMAGE_NAME, "-f devops/Dockerfile .")
-          echo "✅ Imagen construida: $IMAGE_NAME:"
+          - name: Build Docker image
+            run: |
+              echo "🚀 Construyendo la imagen Docker..."
+              IMAGE_TAG=${{ github.sha }}
+              docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f devops/Dockerfile .
+              echo "✅ Imagen construida: $IMAGE_NAME:$IMAGE_TAG"
+
           
 
    
