@@ -116,6 +116,37 @@ jobs:
           docker compose down --volumes || true
           docker rmi "$IMAGE_NAME" || true
           echo "TODO: cleanup"
+
+       - name: Build Docker image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          FULL_IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$IMAGE_TAG
+          echo "Building $FULL_IMAGE_NAME"
+          docker build -t $FULL_IMAGE_NAME -f devops/Dockerfile .
+      
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      
+      - name: Push Docker image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          FULL_IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$IMAGE_TAG
+          docker push $FULL_IMAGE_NAME
+          
+      - name: Build JAR
+        run: mvn clean package -DskipTests
+
+      - name: Upload JAR to Artifactory
+        run: |
+          JAR_FILE=$(ls target/*.jar | head -n 1)
+          VERSION=$(echo $JAR_FILE)
+          DEST_URL="$ARTIFACTORY/libs-snapshot-local/com/scalian/app/$VERSION/$(basename $JAR_FILE)"
+      
+          echo "Uploading $JAR_FILE to $DEST_URL"
+      
+          curl -u ${{ secrets.ARTIFACTORY_USER }}:${{ secrets.ARTIFACTORY_PASSWORD }} \
+               -T $JAR_FILE \
+               "$DEST_URL"   
           
 
           
