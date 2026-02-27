@@ -40,7 +40,10 @@ jobs:
     #environment: DEV
     runs-on: [self-hosted, linux, docker]
     # Ejecutar el job en contenedor (Docker como agente):
-    container: python:3.6-slim
+    #container: python:3.6-slim
+    container:
+      image: python:3.6-slim
+      options: --privileged -v /var/run/docker.sock:/var/run/docker.sock
     # definición de los diferentes pasos del job
     steps:
       # Descarga el código del repositorio dentro de la máquina virtual.
@@ -78,6 +81,11 @@ jobs:
           echo "🧪 Ejecutando tests con pytest..."
           pytest -q 
 
+      - name: Install Docker CLI
+        run: |
+          apt-get update
+          apt-get install -y docker.io
+          
       - name: Build Docker image
         run: |
           echo "🚀 Construyendo la imagen Docker..."
