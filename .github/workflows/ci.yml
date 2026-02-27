@@ -12,6 +12,7 @@ on:
 
   workflow_dispatch:
     inputs:
+     #definimos el parámetro de codición para ejecutar o no el job CD
       RUN_CD:
         description: 'Run Continuous Deployment'
         required: false
@@ -21,13 +22,16 @@ on:
 permissions:
   contents: read
   packages: write
+  
 
 env:
+  # Variables de entorno globales:
   IMAGE_NAME: "scalian_training-python-app"
   APP_URL: "http://localhost:5001/"
   REGISTRY: ${{ vars.REGISTRY_HOST }}
   ARTIFACTORY: ${{ vars.ARTIFACTORY_URL }}
   DEPLOY_ENV: ${{ github.ref_name == 'main' && 'PRO' || 'DEV' }}
+  
 
 jobs:
 
@@ -35,37 +39,58 @@ jobs:
   # CI
   # =========================
   ci:
+    # nombre que veremos del job
     name: Continuous Integration
-    runs-on: [self-hosted, linux]
+    #runs-on: ubuntu-latest
+    environment: DEV
+    runs-on: [self-hosted, linux, docker]
+    # Ejecutar el job en contenedor (Docker como agente):
+    #container: python:3.6-slim
 
     steps:
+      # Descarga el código del repositorio dentro de la máquina virtual.
       - name: Checkout
         uses: actions/checkout@v4
+      
 
       - name: Mostrar contexto
         run: |
           echo "Repo: $GITHUB_REPOSITORY"
+          echo "Ref:  $GITHUB_REF"
           echo "Branch: $GITHUB_REF_NAME"
+          echo "RUN_CD: ${{ inputs.RUN_CD }}"
           echo "Deploying to $DEPLOY_ENV"
+          
+      - name: Usando variables en shell
+        run: |
+          echo "Image: $IMAGE_NAME"
+          echo "App URL: $APP_URL" 
 
-      # ✅ Mejor práctica: instalar Python aislado
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
+      - name: Mostrar variables
+        run: |
+          echo "Artifactory URL: $ARTIFACTORY"
+          echo "REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}"
+          echo "REGISTRY_HOST: ${{ vars.REGISTRY_HOST }}"
+          echo "REGISTRY_USER: ${{ secrets.REGISTRY_USER }}"
+      
       - name: Install dependencies & Run tests
         run: |
+          echo "📦 Instalando dependencias..."
+          pip install --upgrade pip
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
+      
           pytest -q
 
       # ✅ Build solo una vez en CI
       - name: Build Docker image
         run: |
+          echo "🚀 Construyendo la imagen Docker..."
           IMAGE_TAG=${{ github.sha }}
+          docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f devops/Dockerfile .
+          echo "✅ Imagen construida: $IMAGE_NAME:$IMAGE_TAG"
           docker build -t $IMAGE_NAME:$IMAGE_TAG -f devops/Dockerfile .
           echo "Imagen construida: $IMAGE_NAME:$IMAGE_TAG"
 
@@ -90,31 +115,64 @@ jobs:
     runs-on: ubuntu-latest
     needs: ci
     if: ${{ (github.ref_name == 'develop' || github.ref_name == 'main') && github.event_name == 'workflow_dispatch' && inputs.RUN_CD == true }}
+    steps:
+      - name: Deploy
+        run: echo "🚀 Ejecutando CD..."
 
     steps:
       - name: Checkout
+        uses: actions/checkout@v4   
         uses: actions/checkout@v4
 
+      - name: Build image (por si no existe en runner)
       - name: Pull image from GHCR
         run: |
+          docker build -t $IMAGE_NAME:latest -f devops/Dockerfile .
           IMAGE_TAG=${{ github.sha }}
           FULL_IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$IMAGE_TAG
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
           docker pull $FULL_IMAGE_NAME
 
+      - name: Levantar servicios
+        run: docker compose up -d
       - name: Deploy
         run: |
           docker compose up -d
 
+      - name: Esperar a que la app esté lista
       - name: Wait for app
         run: sleep 5
 
+      - name: Test E2E con curl
+        run: |
+          curl -fsS $APP_URL  
       - name: Test E2E
         run: curl -fsS $APP_URL
 
+      - name: Cleanup (siempre)
       - name: Cleanup
         if: always()
-        run: docker compose down --volumes || true
+        run: |
+          docker compose down --volumes || true
+          docker rmi "$IMAGE_NAME" || true
+          echo "TODO: cleanup"
+
+      - name: Build Docker image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          FULL_IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$IMAGE_TAG
+          echo "Building $FULL_IMAGE_NAME"
+          docker build -t $FULL_IMAGE_NAME -f devops/Dockerfile .
+      
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      
+      - name: Push Docker image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          FULL_IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$IMAGE_TAG
+          docker push $FULL_IMAGE_NAME 
+        run: docker compose down --volumes || tru
           
 
           
