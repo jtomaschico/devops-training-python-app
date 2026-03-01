@@ -1,0 +1,94 @@
+stages:
+  - ci
+  - cd
+
+# ==================================
+# Variables globales
+# ==================================
+variables:
+  IMAGE_NAME: "scalian_training-python-app"
+  APP_URL: "http://localhost:5001/"
+  DEPLOY_ENV: "${CI_COMMIT_BRANCH == 'main' ? 'PRO' : 'DEV'}"
+  DOCKER_DRIVER: overlay2
+
+# ==================================
+# CI
+# ==================================
+ci:
+  stage: ci
+  image: python:3.6-slim
+  tags:
+    - docker   # runner con soporte docker
+  services:
+    - docker:dind
+  before_script:
+    - apt-get update && apt-get install -y docker.io curl
+  script:
+    - echo "Repo: $CI_PROJECT_PATH"
+    - echo "Branch: $CI_COMMIT_BRANCH"
+    - echo "Deploying to $DEPLOY_ENV"
+
+    - echo "Image: $IMAGE_NAME"
+    - echo "App URL: $APP_URL"
+
+    - echo "📦 Instalando dependencias..."
+    - pip install --upgrade pip
+    - |
+      if [ -f requirements.txt ]; then
+        pip install -r requirements.txt
+      fi
+
+    - echo "🧪 Ejecutando tests con pytest..."
+    - pytest -q
+
+    - echo "🚀 Construyendo imagen Docker..."
+    - IMAGE_TAG=$CI_COMMIT_SHA
+    - docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f devops/Dockerfile .
+    - echo "✅ Imagen construida: $IMAGE_NAME:$IMAGE_TAG"
+
+  only:
+    - branches
+
+# ==================================
+# CD (manual)
+# ==================================
+cd:
+  stage: cd
+  image: docker:latest
+  services:
+    - docker:dind
+  needs:
+    - ci
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+  script:
+    - echo "🚀 Ejecutando CD..."
+
+    # Build local
+    - docker build -t $IMAGE_NAME:latest -f devops/Dockerfile .
+
+    # Levantar servicios
+    - docker compose up -d
+    - sleep 5
+
+    # E2E
+    - curl -fsS $APP_URL
+
+    # Cleanup
+    - docker compose down --volumes || true
+    - docker rmi "$IMAGE_NAME" || true
+
+    # ==================================
+    # Build & Push a GitLab Registry
+    # ==================================
+    - IMAGE_TAG=$CI_COMMIT_SHA
+    - FULL_IMAGE_NAME=$CI_REGISTRY_IMAGE:$IMAGE_TAG
+
+    - echo "Building $FULL_IMAGE_NAME"
+    - docker build -t $FULL_IMAGE_NAME -f devops/Dockerfile .
+
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+
+    - docker push $FULL_IMAGE_NAME
