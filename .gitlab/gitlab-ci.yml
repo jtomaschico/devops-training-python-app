@@ -2,18 +2,14 @@ stages:
   - ci
   - cd
 
-# ==================================
 # Variables globales
-# ==================================
 variables:
   IMAGE_NAME: "scalian_training-python-app"
   APP_URL: "http://localhost:5001/"
   DEPLOY_ENV: "${CI_COMMIT_BRANCH == 'main' ? 'PRO' : 'DEV'}"
   DOCKER_DRIVER: overlay2
 
-# ==================================
 # CI
-# ==================================
 ci:
   stage: ci
   image: python:3.6-slim
@@ -49,9 +45,7 @@ ci:
   only:
     - branches
 
-# ==================================
-# CD (manual)
-# ==================================
+# CD 
 cd:
   stage: cd
   image: docker:latest
@@ -80,9 +74,8 @@ cd:
     - docker compose down --volumes || true
     - docker rmi "$IMAGE_NAME" || true
 
-    # ==================================
+    
     # Build & Push a GitLab Registry
-    # ==================================
     - IMAGE_TAG=$CI_COMMIT_SHA
     - FULL_IMAGE_NAME=$CI_REGISTRY_IMAGE:$IMAGE_TAG
 
