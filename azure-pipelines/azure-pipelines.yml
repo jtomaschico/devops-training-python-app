@@ -58,3 +58,17 @@ stages:
         displayName: "CI Python (template)"
         steps:
           - template: azure-pipelines/templates/ci-python-steps.yml@iac
+
+      - job: Build_Docker_Image
+      displayName: "Build Docker Image"
+      dependsOn: CI_Template
+      steps:
+        - checkout: self  
+        - script: |
+            echo "Building Docker image..."
+            #docker build -t $(IMAGE_NAME):$(Build.BuildId) -t $(IMAGE_NAME):latest -f devops/Dockerfile .
+            docker build \
+            --build-arg VERSION=$(Build.BuildNumber) \
+            -t $(IMAGE_NAME):latest \
+            -f devops/Dockerfile .
+          displayName: "Docker Build"   
