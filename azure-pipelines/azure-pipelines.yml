@@ -1,10 +1,42 @@
-# Práctica 5 - Azure DevOps Pipelines (dummy)
-#
-# Punto de partida: pipeline mínimo para validar que Azure DevOps lee el repo de GitHub
-# y ejecuta un YAML sin errores.
+trigger:
+  branches:
+    include:
+      - develop
+      - main
+pr:
+  branches:
+    include:
+      - develop
+      - main
 
-trigger: none
-pr: none
+resources:
+  repositories:
+    - repository: iac
+      type: github
+      name: jtomaschico/devops-training-iac-devops
+      ref: refs/heads/feat/base
+      endpoint: jtomaschico
+
+variables:
+  - group: josetoCredentials
+  - name: IMAGE_NAME
+    value: "scalian_training-java-app"
+  - name: APP_URL
+    value: "http://localhost:8084/hello"  # Define tu URL de aplicación o cualquier otra variable relevante
+
+parameters:
+  - name: RUN_CD
+    type: boolean
+    default: false
+    displayName: "Run Continuous Deployment"
+
+  - name: DEPLOY_ENV
+    type: string
+    default: DEV
+    displayName: "Deployment Environment"
+
+#pool:
+  #name: Default   # Self-hosted agent
 
 pool:
   vmImage: ubuntu-latest
