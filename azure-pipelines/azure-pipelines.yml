@@ -38,9 +38,18 @@ parameters:
 pool:
   name: Default   # Self-hosted agent
 
-steps:
-  - script: |
-      echo "Repo:   $(Build.Repository.Name)"
-      echo "Branch: $(Build.SourceBranchName)"
-      echo "SHA:    $(Build.SourceVersion)"
-    displayName: "Info (dummy)"
+stages:
+  - stage: CI
+    displayName: "Continuous Integration"
+    jobs:
+      - job: Info
+        displayName: "Info devops-training-python-app"
+        steps:
+          - script: |
+              echo "Repo:   $(Build.Repository.Name)"
+              echo "Branch: $(Build.SourceBranchName)"
+              echo "SHA:    $(Build.SourceVersion)"
+              echo "Reason: $(Build.Reason)"
+              echo "IMAGE: $(IMAGE_NAME)"
+              echo "URL:   $(APP_URL)"
+            displayName: "Show Info"
