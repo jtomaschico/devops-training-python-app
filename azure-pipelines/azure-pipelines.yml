@@ -35,11 +35,8 @@ parameters:
     default: DEV
     displayName: "Deployment Environment"
 
-#pool:
-  #name: Default   # Self-hosted agent
-
 pool:
-  vmImage: ubuntu-latest
+  name: Default   # Self-hosted agent
 
 steps:
   - script: |
