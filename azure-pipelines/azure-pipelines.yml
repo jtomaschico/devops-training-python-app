@@ -53,3 +53,8 @@ stages:
               echo "IMAGE: $(IMAGE_NAME)"
               echo "URL:   $(APP_URL)"
             displayName: "Show Info"
+
+      - job: CI_Template
+        displayName: "CI Python (template)"
+        steps:
+          - template: azure-pipelines/templates/ci-python-steps.yml@iac
