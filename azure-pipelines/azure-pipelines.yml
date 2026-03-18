@@ -20,7 +20,7 @@ resources:
 variables:
   - group: josetoCredentials
   - name: IMAGE_NAME
-    value: "scalian_training-java-app"
+    value: "scalian_training-python-app"
   - name: APP_URL
     value: "http://localhost:8084/hello"  # Define tu URL de aplicación o cualquier otra variable relevante
 
