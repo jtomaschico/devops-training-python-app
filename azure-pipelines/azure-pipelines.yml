@@ -3,6 +3,7 @@ trigger:
     include:
       - develop
       - main
+
 pr:
   branches:
     include:
@@ -71,4 +72,4 @@ stages:
               --build-arg VERSION=$(Build.BuildNumber) \
               -t $(IMAGE_NAME):latest \
               -f devops/Dockerfile .
-            displayName: "Docker Build"   
+            displayName: "Docker Build" 
