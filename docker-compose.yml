@@ -1,4 +1,12 @@
-version: "3.7"
+version: "3.8"
+
+networks:
+  python-project-net: 
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.234.0/24
 
 services:
   app:
@@ -33,7 +41,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock  # Permite ejecutar Docker desde el agente
     networks:
-      - java-project-net  # Red externa donde están Artifactory, Docker registry, etc.       
+      - python-project-net  # Red externa donde están Artifactory, Docker registry, etc.       
 
   
   db:
