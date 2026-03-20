@@ -21,9 +21,9 @@ resources:
 variables:
   - group: josetoCredentials
   - name: IMAGE_NAME
-    value: scalian_training-java-app
+    value: "scalian_training-python-app"
   - name: APP_URL
-    value: http://localhost:8084/hello
+    value: "http://localhost:8084/hello"
 
 parameters:
   - name: RUN_CD
@@ -44,21 +44,21 @@ stages:
     displayName: "Continuous Integration"
     jobs:
       - job: Info
-        displayName: "Info devops-training-java-app"
+        displayName: "Info devops-training-python-app"
         steps:
           - script: |
               echo "Repo:   $(Build.Repository.Name)"
               echo "Branch: $(Build.SourceBranchName)"
               echo "SHA:    $(Build.SourceVersion)"
               echo "Reason: $(Build.Reason)"
-              echo "IMAGE:  $(IMAGE_NAME)"
-              echo "URL:    $(APP_URL)"
+              echo "IMAGE: $(IMAGE_NAME)"
+              echo "URL:   $(APP_URL)"
             displayName: "Show Info"
 
       - job: CI_Template
-        displayName: "CI Java (template)"
+        displayName: "CI Python (template)"
         steps:
-          - template: azure-pipelines/templates/ci-java-steps.yml@iac
+          - template: azure-pipelines/templates/ci-python-steps.yml@iac
 
       - job: Build_Docker_Image
         displayName: "Build Docker Image"
@@ -73,10 +73,10 @@ stages:
                 -f devops/Dockerfile .
             displayName: "Docker Build"
 
-  - stage: CD
+  - stage: CD   # ✅ CORREGIDO (alineación)
     displayName: "Continuous Deployment"
     dependsOn: CI
-    condition: eq(${{ parameters.RUN_CD }}, true)
+    condition: eq(${{ parameters.RUN_CD }}, true)   # ✅ CORREGIDO
     jobs:
       - job: deploy
         displayName: "Deploy (simulado) + E2E"
