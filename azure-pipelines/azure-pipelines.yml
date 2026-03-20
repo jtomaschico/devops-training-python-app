@@ -73,3 +73,38 @@ stages:
               -t $(IMAGE_NAME):latest \
               -f devops/Dockerfile .
             displayName: "Docker Build" 
+
+   - stage: CD
+    displayName: "Continuous Deployment"
+    dependsOn: CI
+    condition: eq('${{ parameters.RUN_CD }}', true)
+    jobs:
+      - job: deploy
+        displayName: "Deploy (simulado) + E2E"   
+        steps:
+          - checkout: self
+          # Levantar servicios con docker-compose
+          - script: |
+              docker compose up -d
+            displayName: 'Levantar servicios'
+    
+          # Esperar a que la app esté lista
+          - script: |
+              sleep 5
+            displayName: 'Esperar a que la app esté lista'
+    
+          # Test E2E con curl
+          - script: |
+              curl -fsS $(APP_URL)
+            displayName: 'Test E2E con curl'
+    
+          # Cleanup (siempre)
+          - script: |
+              docker compose down --volumes || true
+              docker rmi $(IMAGE_NAME) || true
+              echo "TODO: cleanup"
+            displayName: 'Cleanup'
+            # En Azure DevOps puedes usar condition para siempre:
+            condition: always()         
+
+            
