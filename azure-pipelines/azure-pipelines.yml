@@ -21,9 +21,9 @@ resources:
 variables:
   - group: josetoCredentials
   - name: IMAGE_NAME
-    value: "scalian_training-python-app"
+    value: scalian_training-java-app
   - name: APP_URL
-    value: "http://localhost:8084/hello"  # Define tu URL de aplicación o cualquier otra variable relevante
+    value: http://localhost:8084/hello
 
 parameters:
   - name: RUN_CD
@@ -37,74 +37,67 @@ parameters:
     displayName: "Deployment Environment"
 
 pool:
-  name: Default   # Self-hosted agent
+  name: Default
 
 stages:
   - stage: CI
     displayName: "Continuous Integration"
     jobs:
       - job: Info
-        displayName: "Info devops-training-python-app"
+        displayName: "Info devops-training-java-app"
         steps:
           - script: |
               echo "Repo:   $(Build.Repository.Name)"
               echo "Branch: $(Build.SourceBranchName)"
               echo "SHA:    $(Build.SourceVersion)"
               echo "Reason: $(Build.Reason)"
-              echo "IMAGE: $(IMAGE_NAME)"
-              echo "URL:   $(APP_URL)"
+              echo "IMAGE:  $(IMAGE_NAME)"
+              echo "URL:    $(APP_URL)"
             displayName: "Show Info"
 
       - job: CI_Template
-        displayName: "CI Python (template)"
+        displayName: "CI Java (template)"
         steps:
-          - template: azure-pipelines/templates/ci-python-steps.yml@iac
+          - template: azure-pipelines/templates/ci-java-steps.yml@iac
 
       - job: Build_Docker_Image
         displayName: "Build Docker Image"
         dependsOn: CI_Template
         steps:
-          - checkout: self  
+          - checkout: self
           - script: |
               echo "Building Docker image..."
-              #docker build -t $(IMAGE_NAME):$(Build.BuildId) -t $(IMAGE_NAME):latest -f devops/Dockerfile .
               docker build \
-              --build-arg VERSION=$(Build.BuildNumber) \
-              -t $(IMAGE_NAME):latest \
-              -f devops/Dockerfile .
-            displayName: "Docker Build" 
+                --build-arg VERSION=$(Build.BuildNumber) \
+                -t $(IMAGE_NAME):latest \
+                -f devops/Dockerfile .
+            displayName: "Docker Build"
 
-   - stage: CD
+  - stage: CD
     displayName: "Continuous Deployment"
     dependsOn: CI
-    condition: eq('${{ parameters.RUN_CD }}', true)
+    condition: eq(${{ parameters.RUN_CD }}, true)
     jobs:
       - job: deploy
-        displayName: "Deploy (simulado) + E2E"   
+        displayName: "Deploy (simulado) + E2E"
         steps:
           - checkout: self
-          # Levantar servicios con docker-compose
+
           - script: |
               docker compose up -d
-            displayName: 'Levantar servicios'
-    
-          # Esperar a que la app esté lista
+            displayName: "Levantar servicios"
+
           - script: |
               sleep 5
-            displayName: 'Esperar a que la app esté lista'
-    
-          # Test E2E con curl
+            displayName: "Esperar a que la app esté lista"
+
           - script: |
               curl -fsS $(APP_URL)
-            displayName: 'Test E2E con curl'
-    
-          # Cleanup (siempre)
+            displayName: "Test E2E con curl"
+
           - script: |
               docker compose down --volumes || true
               docker rmi $(IMAGE_NAME) || true
               echo "TODO: cleanup"
-            displayName: 'Cleanup'
-            # En Azure DevOps puedes usar condition para siempre:
-            condition: always()         
-
-            
+            displayName: "Cleanup"
+            condition: always()
