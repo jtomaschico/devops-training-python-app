@@ -6,7 +6,7 @@ services:
     container_name: my-flask-app-dc
     restart: unless-stopped
     networks:
-      - scalian_training  # Aquí solo debes referenciar una red
+      - scalian_training
     environment:
       DB_USER: root
       DB_PWD: rootpwd
@@ -29,7 +29,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - python-project-net  # Esta red es externa, definida en la sección networks
+      - python-project-net
 
   db:
     image: postgres:16-alpine
@@ -45,7 +45,7 @@ services:
       - ./db:/docker-entrypoint-initdb.d
       - dbdata:/var/lib/postgresql/data
     networks:
-      - scalian_training  # Referencia la red correctamente
+      - scalian_training
 
 networks:
   python-project-net:
@@ -53,14 +53,9 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.16.234.0/24
-
+        - subnet: 172.18.234.0/24  # Rango de subred diferente
   scalian_training:
-    driver: bridge  # Red adicional definida aquí
+    driver: bridge
 
 volumes:
   dbdata:
-
-
-
-
