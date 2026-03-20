@@ -1,24 +1,12 @@
 version: "3.8"
 
-networks:
-  python-project-net: 
-    driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.234.0/24
-
 services:
   app:
-    #image: jtomaschico/devops-training-python-app:0.0.1
     image: ${IMAGE_NAME}
-    #build: 
-    #  context: .
-    #  dockerfile: devops/Dockerfile
     container_name: my-flask-app-dc
     restart: unless-stopped
     networks:
-      - scalian_training
+      - scalian_training  # Aquí solo debes referenciar una red
     environment:
       DB_USER: root
       DB_PWD: rootpwd
@@ -31,19 +19,18 @@ services:
       - "5001:5000"
 
   azp-agent:
-    image: mcr.microsoft.com/azure-pipelines/vsts-agent:latest  # Imagen del agente de Azure Pipelines
+    image: mcr.microsoft.com/azure-pipelines/vsts-agent:latest
     restart: unless-stopped
     environment:
-      AZP_URL: "https://dev.azure.com/jtomas210"  # URL de tu organización de Azure DevOps
-      AZP_TOKEN: "${AZP_TOKEN}"  # Asegúrate de definir este token en tus variables de entorno o .env
-      AZP_POOL: "Default"  # El nombre de tu pool de agentes
-      AZP_AGENT_NAME: "UNED2"  # Nombre de tu agente
+      AZP_URL: "https://dev.azure.com/jtomas210"
+      AZP_TOKEN: "${AZP_TOKEN}"
+      AZP_POOL: "Default"
+      AZP_AGENT_NAME: "UNED2"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock  # Permite ejecutar Docker desde el agente
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      - python-project-net  # Red externa donde están Artifactory, Docker registry, etc.       
+      - python-project-net  # Esta red es externa, definida en la sección networks
 
-  
   db:
     image: postgres:16-alpine
     container_name: my-flask-app-db
@@ -58,14 +45,20 @@ services:
       - ./db:/docker-entrypoint-initdb.d
       - dbdata:/var/lib/postgresql/data
     networks:
-      scalian_training:
+      - scalian_training  # Referencia la red correctamente
 
 networks:
-  scalian_training:
+  python-project-net:
     driver: bridge
-  
-volumes:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.234.0/24
 
+  scalian_training:
+    driver: bridge  # Red adicional definida aquí
+
+volumes:
   dbdata:
 
 
