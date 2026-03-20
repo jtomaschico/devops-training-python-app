@@ -53,7 +53,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.19.234.0/24  # Cambio de rango de subred
+        - subnet: 172.18.234.0/24  # Cambio de rango de subred
   scalian_training:
     driver: bridge
 
