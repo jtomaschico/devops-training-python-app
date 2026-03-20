@@ -53,7 +53,8 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet:172.20.234.0/24  # Cambio de rango de subred
+        - subnet: 172.20.234.0/24  # Rango de subred correcto
+          gateway: 172.20.234.1     # Opcional: define el gateway si lo necesitas
   scalian_training:
     driver: bridge
 
