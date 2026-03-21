@@ -23,7 +23,7 @@ variables:
   - name: IMAGE_NAME
     value: "scalian_training-python-app"
   - name: APP_URL
-    value: "http://localhost:5001/hello"
+    value: "http://localhost:5001/"
 
 parameters:
   - name: RUN_CD
